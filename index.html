@@ -107,6 +107,19 @@ map.addControl(new maplibregl.GeolocateControl({ trackUserLocation: false }), 't
 map.addControl(new maplibregl.FullscreenControl(), 'top-right');
 map.touchZoomRotate.disableRotation();
 
+// When embedded in an iframe, the map's container can settle to its
+// final size slightly after MapLibre first measures it (webfonts,
+// host-page layout shifts). Keep the canvas in sync with its container.
+if (window.ResizeObserver) {
+  const mapEl = document.getElementById('map');
+  let resizeTimer = null;
+  new ResizeObserver(() => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => map.resize(), 50);
+  }).observe(mapEl);
+}
+window.addEventListener('load', () => setTimeout(() => map.resize(), 300));
+
 const css = getComputedStyle(document.documentElement);
 const C = n => css.getPropertyValue(n).trim();
 
