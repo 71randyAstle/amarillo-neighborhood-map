@@ -188,7 +188,10 @@ map.on('load', () => {
   });
   map.on('click','nb-fill', e => {
     if(!e.features.length) return;
-    window.location.href = e.features[0].properties.url;
+    const url = e.features[0].properties.url;
+    // Navigate the top-level page, not this iframe, when embedded on the RG site.
+    try { (window.top || window).location.href = url; }
+    catch(err){ window.location.href = url; }
   });
 
   // directory <-> map
