@@ -325,10 +325,10 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
       for (const f of j.features || []) {
         const p = f.properties || {}; if (!p.name) continue;
         const city = CITIES.includes(p.city) ? p.city : (CITIES.includes(p.district) ? p.district : '');
-        const key = p.name + '|' + (city || p.postcode || ''); if (seen.has(key)) continue; seen.add(key);
-        const where = city || (p.postcode ? 'TX ' + p.postcode : '');
+        const town = (city === 'Canyon' || city === 'Bushland') ? city : 'Amarillo';
+        const key = p.name + '|' + town; if (seen.has(key)) continue; seen.add(key);
         const main = (num ? num + ' ' : '') + p.name;
-        items.push({ main, sub: where, fill: main + (city ? ', ' + city + ', TX' : (p.postcode ? ', TX ' + p.postcode : ', Amarillo, TX')) });
+        items.push({ main, sub: town + ', TX', fill: main + ', ' + town + ', TX' });
         if (items.length >= 6) break;
       }
       active = -1; render();
@@ -338,6 +338,7 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
     clearTimeout(timer); const q = input.value;
     if (q.trim().length < 3) { close(); return; }
     timer = setTimeout(() => { if (q !== lastQ) { lastQ = q; suggest(q); } }, 250);
+    if (items.length && !items[0].main.toLowerCase().startsWith(q.trim().split(/\s+/)[0].toLowerCase())) close();
   });
   input.addEventListener('keydown', e => {
     if (list.hidden) return;
