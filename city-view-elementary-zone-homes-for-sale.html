@@ -17,11 +17,18 @@
 .sz-wrap ul.sz-hoods{list-style:none !important;padding:0 !important;margin:4px 0 0 !important;}
 .sz-hoods li{margin:0;list-style:none !important;display:block;}
 .sz-map{width:100%;margin:14px 0 6px;}
-.sz-map iframe{display:block;width:100%;height:440px;border:0;border-radius:8px;}
-@media (max-width:600px){.sz-map iframe{height:360px;}}
+.sz-map iframe{display:block;width:100%;height:560px;border:0;border-radius:8px;}
+@media (max-width:600px){.sz-map iframe{height:500px;}}
 .sz-hoods a{display:inline-block;padding:6px 12px;border:1px solid #c9d2dc;border-radius:999px;background:#f2f4f7;color:#1f3b57 !important;font-size:15px;font-weight:600;text-decoration:none;}
 .sz-hoods a::after{content:" \203A";}
 .sz-hoods a:hover{background:#e3e9f0;border-color:#1f3b57;}
+.sz-tablewrap{overflow-x:auto;margin:6px 0 4px;}
+.sz-table{border-collapse:collapse;width:100%;min-width:520px;font-size:15px;}
+.sz-table th,.sz-table td{border-bottom:1px solid #e3e3e3;padding:8px 10px;text-align:left;vertical-align:top;}
+.sz-table th{font-size:13px;color:#555;font-weight:600;}
+.sz-table td:first-child{font-weight:600;white-space:nowrap;}
+.sz-wrap ul.sz-list{margin:6px 0 4px 1.1em !important;padding:0 !important;}
+.sz-list li{margin:0 0 6px;}
 .sz-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:0 0 18px;}
 .sz-tool{display:block;padding:14px 16px;border-radius:8px;background:#1f3b57;color:#fff !important;text-decoration:none;font-weight:bold;line-height:1.3;}
 .sz-tool small{display:block;font-weight:normal;opacity:.9;margin-top:4px;font-size:13px;}
@@ -42,10 +49,10 @@
 <section class="sz-card">
 <h2>School Lineup for This Zone</h2>
 <div class="sz-path">
-<div class="sz-step"><b>City View Elementary</b><small>Pre-K to 4th grade<br>3400 Knoll Dr, Amarillo</small><a href="https://cty.canyonisd.net" target="_blank" rel="noopener">School website</a></div>
-<div class="sz-step"><b>Pinnacle Intermediate</b><small>5th and 6th grade<br>4545 Meadow Ridge Dr, Amarillo</small><a href="https://pi.canyonisd.net" target="_blank" rel="noopener">School website</a></div>
-<div class="sz-step"><b>Randall Junior High</b><small>7th and 8th grade<br>5540 Attebury Dr, Amarillo</small><a href="https://rjh.canyonisd.net" target="_blank" rel="noopener">School website</a></div>
-<div class="sz-step"><b>Randall High School</b><small>9th to 12th grade<br>9201 S Bell St, Amarillo</small><a href="https://rhs.canyonisd.net" target="_blank" rel="noopener">School website</a></div>
+<div class="sz-step"><b>City View Elementary</b><small>Pre-K to 4th grade<br>3400 Knoll Dr, Amarillo</small><a href="https://cty.canyonisd.net" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=191901112&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
+<div class="sz-step"><b>Pinnacle Intermediate</b><small>5th and 6th grade<br>4545 Meadow Ridge Dr, Amarillo</small><a href="https://pi.canyonisd.net" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=191901114&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
+<div class="sz-step"><b>Randall Junior High</b><small>7th and 8th grade<br>5540 Attebury Dr, Amarillo</small><a href="https://rjh.canyonisd.net" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=191901045&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
+<div class="sz-step"><b>Randall High School</b><small>9th to 12th grade<br>9201 S Bell St, Amarillo</small><a href="https://rhs.canyonisd.net" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=191901002&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
 </div>
 <p class="sz-note">Canyon ISD is closed to transfers, so a home's address decides its schools.</p>
 </section>
@@ -53,7 +60,7 @@
 <section class="sz-card">
 <h2>Where the Zone Is and What the Homes Are Like</h2>
 <p>The City View zone covers south Amarillo from Hollywood Road (Loop 335) north to about SW 58th Avenue. Western Street is its western edge south of Farmers Avenue, and north of Farmers it sits east of Georgia Street. It is an Amarillo address in Canyon ISD, not Amarillo ISD.</p>
-<div class="sz-map"><iframe src="https://71randyastle.github.io/amarillo-neighborhood-map/schools/?zone=city-view&amp;level=elementary&amp;v=1" title="Map of the City View Elementary attendance zone" width="100%" height="440" loading="lazy"></iframe></div>
+<div class="sz-map"><iframe src="https://71randyastle.github.io/amarillo-neighborhood-map/schools/?zone=city-view&amp;level=elementary&amp;v=1" title="Map of the City View Elementary attendance zone" width="100%" height="560" loading="lazy"></iframe></div>
 <p>Most homes here were built from the mid-2000s on, with some from the late 1990s and a good share of newer construction in recent years.</p>
 <h3>Neighborhoods in the zone</h3>
 <ul class="sz-hoods">
@@ -62,6 +69,36 @@
 <li><a href="/homes-for-sale-saturn-terrace-amarillo/" title="Saturn Terrace homes for sale">Saturn Terrace</a></li>
 <li><a href="/homes-for-sale-the-meadows-amarillo/" title="The Meadows homes for sale">The Meadows</a></li>
 </ul>
+</section>
+
+<section class="sz-card">
+<h2>Drive Times to Each School</h2>
+<div class="sz-tablewrap">
+<table class="sz-table">
+<thead><tr><th>From</th><th>City View Elementary</th><th>Pinnacle Intermediate</th><th>Randall Junior High</th><th>Randall High</th></tr></thead>
+<tbody>
+<tr><td>City View</td><td>about 1 min</td><td>about 6 min</td><td>about 6 min</td><td>about 7 min</td></tr>
+<tr><td>Foxridge/Pheasant Run</td><td>about 5 min</td><td>about 10 min</td><td>about 9 min</td><td>about 10 min</td></tr>
+<tr><td>The Meadows</td><td>about 5 min</td><td>about 10 min</td><td>about 9 min</td><td>about 10 min</td></tr>
+</tbody>
+</table>
+</div>
+<p class="sz-note">Typical drive times from the middle of each neighborhood, without traffic.</p>
+</section>
+
+<section class="sz-card">
+<h2>HOAs and PIDs</h2>
+<p>None of the main neighborhoods in this zone has a known HOA or a City of Amarillo Public Improvement District (PID) assessment. We still confirm this for any home you are considering.</p>
+</section>
+
+<section class="sz-card">
+<h2>New Construction in the Zone</h2>
+<p>Builders active in this zone as of fall 2026:</p>
+<ul class="sz-list">
+<li><b>City View:</b> B&M Amarillo Homes, Castillo Homes, TMT Asset Group, Vertex Builders</li>
+<li><b>Saturn Terrace:</b> Betenbough Homes</li>
+</ul>
+<p class="sz-note">Builders come and go. Ask us who is building in the zone right now.</p>
 </section>
 
 <section class="sz-card sz-faq">

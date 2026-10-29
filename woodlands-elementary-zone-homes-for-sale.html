@@ -17,11 +17,18 @@
 .sz-wrap ul.sz-hoods{list-style:none !important;padding:0 !important;margin:4px 0 0 !important;}
 .sz-hoods li{margin:0;list-style:none !important;display:block;}
 .sz-map{width:100%;margin:14px 0 6px;}
-.sz-map iframe{display:block;width:100%;height:440px;border:0;border-radius:8px;}
-@media (max-width:600px){.sz-map iframe{height:360px;}}
+.sz-map iframe{display:block;width:100%;height:560px;border:0;border-radius:8px;}
+@media (max-width:600px){.sz-map iframe{height:500px;}}
 .sz-hoods a{display:inline-block;padding:6px 12px;border:1px solid #c9d2dc;border-radius:999px;background:#f2f4f7;color:#1f3b57 !important;font-size:15px;font-weight:600;text-decoration:none;}
 .sz-hoods a::after{content:" \203A";}
 .sz-hoods a:hover{background:#e3e9f0;border-color:#1f3b57;}
+.sz-tablewrap{overflow-x:auto;margin:6px 0 4px;}
+.sz-table{border-collapse:collapse;width:100%;min-width:520px;font-size:15px;}
+.sz-table th,.sz-table td{border-bottom:1px solid #e3e3e3;padding:8px 10px;text-align:left;vertical-align:top;}
+.sz-table th{font-size:13px;color:#555;font-weight:600;}
+.sz-table td:first-child{font-weight:600;white-space:nowrap;}
+.sz-wrap ul.sz-list{margin:6px 0 4px 1.1em !important;padding:0 !important;}
+.sz-list li{margin:0 0 6px;}
 .sz-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:0 0 18px;}
 .sz-tool{display:block;padding:14px 16px;border-radius:8px;background:#1f3b57;color:#fff !important;text-decoration:none;font-weight:bold;line-height:1.3;}
 .sz-tool small{display:block;font-weight:normal;opacity:.9;margin-top:4px;font-size:13px;}
@@ -42,9 +49,9 @@
 <section class="sz-card">
 <h2>School Lineup for This Zone</h2>
 <div class="sz-path sz-3">
-<div class="sz-step"><b>Woodlands Elementary</b><small>Pre-K to 4th grade<br>2501 N Coulter St, Amarillo</small><a href="https://www.amaisd.org/Woodlands" target="_blank" rel="noopener">School website</a></div>
-<div class="sz-step"><b>De Zavala Middle School</b><small>5th to 8th grade<br>2801 N Coulter St, Amarillo</small><a href="https://www.amaisd.org/Zavala" target="_blank" rel="noopener">School website</a></div>
-<div class="sz-step"><b>Tascosa High School</b><small>9th to 12th grade<br>3921 Westlawn Ave, Amarillo</small><a href="https://www.amaisd.org/THS" target="_blank" rel="noopener">School website</a></div>
+<div class="sz-step"><b>Woodlands Elementary</b><small>Pre-K to 4th grade<br>2501 N Coulter St, Amarillo</small><a href="https://www.amaisd.org/Woodlands" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=188901142&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
+<div class="sz-step"><b>De Zavala Middle School</b><small>5th to 8th grade<br>2801 N Coulter St, Amarillo</small><a href="https://www.amaisd.org/Zavala" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=188901049&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
+<div class="sz-step"><b>Tascosa High School</b><small>9th to 12th grade<br>3921 Westlawn Ave, Amarillo</small><a href="https://www.amaisd.org/THS" target="_blank" rel="noopener">School website</a> &middot; <a href="https://txschools.gov/?view=school&id=188901005&tab=overview&lng=en" target="_blank" rel="noopener">TEA report card</a></div>
 </div>
 <p class="sz-note">At Woodlands, elementary runs through 4th grade and De Zavala covers 5th through 8th grade.</p>
 </section>
@@ -52,7 +59,7 @@
 <section class="sz-card">
 <h2>Where the Zone Is and What the Homes Are Like</h2>
 <p>The Woodlands zone covers northwest Amarillo, roughly between Coulter Street and the Western Street area from around Amarillo Boulevard north, including the Tascosa Country Club and La Paloma area.</p>
-<div class="sz-map"><iframe src="https://71randyastle.github.io/amarillo-neighborhood-map/schools/?zone=woodlands&amp;level=elementary&amp;v=1" title="Map of the Woodlands Elementary attendance zone" width="100%" height="440" loading="lazy"></iframe></div>
+<div class="sz-map"><iframe src="https://71randyastle.github.io/amarillo-neighborhood-map/schools/?zone=woodlands&amp;level=elementary&amp;v=1" title="Map of the Woodlands Elementary attendance zone" width="100%" height="560" loading="lazy"></iframe></div>
 <p>Homes range from 1980s homes in Westcliff, to 1990s and 2000s homes around La Paloma and Tascosa Country Club, to 2010s homes in The Vineyards and new construction in The Trails.</p>
 <h3>Neighborhoods in the zone</h3>
 <ul class="sz-hoods">
@@ -64,6 +71,57 @@
 <li><a href="/homes-for-sale-estancia-amarillo/" title="Estancia homes for sale">Estancia</a></li>
 <li><a href="/homes-for-sale-the-trails-amarillo/" title="The Trails homes for sale">The Trails</a></li>
 </ul>
+</section>
+
+<section class="sz-card">
+<h2>Drive Times to Each School</h2>
+<div class="sz-tablewrap">
+<table class="sz-table">
+<thead><tr><th>From</th><th>Woodlands Elementary</th><th>De Zavala Middle</th><th>Tascosa High</th></tr></thead>
+<tbody>
+<tr><td>The Woodlands</td><td>about 2 min</td><td>about 2 min</td><td>about 11 min</td></tr>
+<tr><td>La Paloma</td><td>about 3 min</td><td>about 3 min</td><td>about 9 min</td></tr>
+<tr><td>Quail Creek</td><td>about 5 min</td><td>about 5 min</td><td>about 8 min</td></tr>
+<tr><td>The Vineyards</td><td>about 9 min</td><td>about 8 min</td><td>about 13 min</td></tr>
+<tr><td>Westcliff</td><td>about 4 min</td><td>about 5 min</td><td>about 8 min</td></tr>
+<tr><td>Estancia</td><td>about 6 min</td><td>about 6 min</td><td>about 10 min</td></tr>
+<tr><td>The Trails</td><td>about 8 min</td><td>about 8 min</td><td>about 8 min</td></tr>
+</tbody>
+</table>
+</div>
+<p class="sz-note">Typical drive times from the middle of each neighborhood, without traffic.</p>
+</section>
+
+<section class="sz-card">
+<h2>HOAs and PIDs</h2>
+<p>A PID (Public Improvement District) is a yearly City of Amarillo assessment that shows up on the property tax bill and pays for things like entries, parkways and common areas.</p>
+<div class="sz-tablewrap">
+<table class="sz-table">
+<thead><tr><th>Neighborhood</th><th>HOA</th><th>PID</th></tr></thead>
+<tbody>
+<tr><td>La Paloma</td><td>Yes; dues vary by section (La Paloma Homeowners Association plus section associations)</td><td>No</td></tr>
+<tr><td>The Trails</td><td>Yes, The Trails at Tascosa Homeowners Association</td><td>No</td></tr>
+<tr><td>The Vineyards</td><td>Likely; confirm for each home</td><td>Yes, Vineyards PID: $250 per lot each year</td></tr>
+<tr><td>Estancia</td><td>Unknown; confirm for each home</td><td>Yes, Estancia PID (new in 2024)</td></tr>
+<tr><td>Quail Creek</td><td>Only in The Citadel (gated section)</td><td>Only 29 lots on Clear Meadow Cir and Plum Creek Dr</td></tr>
+<tr><td>Westcliff</td><td>Only in the townhome section</td><td>No</td></tr>
+<tr><td>The Woodlands</td><td>No HOA known</td><td>No</td></tr>
+</tbody>
+</table>
+</div>
+<p class="sz-note">PID rates are for 2026-27. HOA dues change, so we confirm dues and PID amounts for any home you are considering.</p>
+</section>
+
+<section class="sz-card">
+<h2>New Construction in the Zone</h2>
+<p>Builders active in this zone as of fall 2026:</p>
+<ul class="sz-list">
+<li><b>The Trails:</b> 111 Homes, Affluent Construction, Connally Construction, Cornerstone Fine Homes, Crowder Homes, Gaut Buccola Homes, Jadon Homes, LYITE Development, Mesquite Building Group, Stately Homes</li>
+<li><b>The Vineyards:</b> 111 Homes, 7:12 Homes, Timber & Stone Homes, Nielsen Builders</li>
+<li><b>Estancia:</b> 111 Homes, Bedwell Homes</li>
+<li><b>La Paloma:</b> KMC Homes</li>
+</ul>
+<p class="sz-note">Builders come and go. Ask us who is building in the zone right now.</p>
 </section>
 
 <section class="sz-card sz-faq">
