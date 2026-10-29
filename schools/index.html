@@ -59,7 +59,13 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .dot{display:inline-block;width:11px;height:11px;border-radius:2px;flex:none;border:1px solid rgba(0,0,0,.25)}
 .embed .dirsec{display:none}
 .note{margin-top:30px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;max-width:72ch}
-.search{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.search{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap;position:relative}
+.ac-wrap{position:relative;flex:1 1 260px;min-width:0;display:flex}
+.ac-wrap input{flex:1}
+.ac{position:absolute;left:0;right:0;top:100%;margin-top:2px;z-index:20;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.18);list-style:none;padding:4px 0;margin-left:0}
+.ac li{padding:8px 12px;cursor:pointer;font-size:15px;color:var(--ink)}
+.ac li small{color:var(--muted);margin-left:6px}
+.ac li[aria-selected="true"],.ac li:hover{background:var(--accent-soft)}
 .search input{flex:1 1 260px;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
 .search input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .search button{font:inherit;font-size:15px;font-weight:600;padding:10px 18px;border:0;border-radius:4px;background:#14365c;color:#fff;cursor:pointer}
@@ -84,7 +90,7 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 <p class="lede">Search an address to see its schools, or pick a grade level and click any zone to see the homes for sale inside it.</p>
 
 <form class="search" id="addr-form" role="search">
-  <input id="addr" type="search" placeholder="Search an address, e.g. 6000 Hillside Rd, Amarillo" aria-label="Address" autocomplete="street-address">
+  <div class="ac-wrap"><input id="addr" type="search" placeholder="Search an address, e.g. 6000 Hillside Rd, Amarillo" aria-label="Address" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="ac"><ul class="ac" id="ac" role="listbox" hidden></ul></div>
   <button type="submit" id="addr-btn">Find schools</button>
 </form>
 <div class="result" id="result" hidden></div>
@@ -284,6 +290,66 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
   html += '<p class="fine">Address matching is approximate. Confirm a specific address with the ' + OFFICIAL + ' before you buy.</p>';
   resultEl.innerHTML = html;
 });
+
+// ---------- Autocomplete (street suggestions from Photon/OSM) ----------
+(function(){
+  const input = document.getElementById('addr'), list = document.getElementById('ac'), form = document.getElementById('addr-form');
+  let timer = null, items = [], active = -1, lastQ = '', ctrl = null;
+  const DIRS = {n:'North', s:'South', e:'East', w:'West', ne:'Northeast', nw:'Northwest', se:'Southeast', sw:'Southwest'};
+  const CITIES = ['Amarillo','Canyon','Bushland'];
+  function close(){ list.hidden = true; list.innerHTML=''; items=[]; active=-1; input.setAttribute('aria-expanded','false'); }
+  function render(){
+    list.innerHTML = '';
+    items.forEach((it,i) => {
+      const li = document.createElement('li'); li.setAttribute('role','option'); li.id='ac-'+i;
+      li.setAttribute('aria-selected', String(i===active));
+      li.innerHTML = esc(it.main) + (it.sub ? '<small>'+esc(it.sub)+'</small>' : '');
+      li.addEventListener('mousedown', e => { e.preventDefault(); pick(i); });
+      list.appendChild(li);
+    });
+    list.hidden = !items.length; input.setAttribute('aria-expanded', String(!!items.length));
+  }
+  function pick(i){ const it = items[i]; if(!it) return; input.value = it.fill; close(); form.requestSubmit(); }
+  async function suggest(raw){
+    const m = raw.match(/^\s*(\d+[A-Za-z]?)\s+(.*)$/);
+    const num = m ? m[1] : '';
+    let street = (m ? m[2] : raw).trim();
+    street = street.replace(/^(n|s|e|w|ne|nw|se|sw)\.?\s+/i, (x,d) => DIRS[d.toLowerCase()] + ' ');
+    if (street.length < 2) { close(); return; }
+    if (ctrl) ctrl.abort(); ctrl = new AbortController();
+    try {
+      const r = await fetch('https://photon.komoot.io/api/?limit=10&lang=en&layer=street&bbox=-102.35,34.85,-101.45,35.40&lat=35.15&lon=-101.88&q=' + encodeURIComponent(street), {signal: ctrl.signal});
+      const j = await r.json();
+      if (input.value !== raw) return;
+      const seen = new Set(); items = [];
+      for (const f of j.features || []) {
+        const p = f.properties || {}; if (!p.name) continue;
+        const city = CITIES.includes(p.city) ? p.city : (CITIES.includes(p.district) ? p.district : '');
+        const town = (city === 'Canyon' || city === 'Bushland') ? city : 'Amarillo';
+        const key = p.name + '|' + town; if (seen.has(key)) continue; seen.add(key);
+        const main = (num ? num + ' ' : '') + p.name;
+        items.push({ main, sub: town + ', TX', fill: main + ', ' + town + ', TX' });
+        if (items.length >= 6) break;
+      }
+      active = -1; render();
+    } catch(e) { if (e.name !== 'AbortError') close(); }
+  }
+  input.addEventListener('input', () => {
+    clearTimeout(timer); const q = input.value;
+    if (q.trim().length < 3) { close(); return; }
+    timer = setTimeout(() => { if (q !== lastQ) { lastQ = q; suggest(q); } }, 250);
+    if (items.length && !items[0].main.toLowerCase().startsWith(q.trim().split(/\s+/)[0].toLowerCase())) close();
+  });
+  input.addEventListener('keydown', e => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); active = (active+1) % items.length; render(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); active = (active-1+items.length) % items.length; render(); }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(active); }
+    else if (e.key === 'Escape') { close(); }
+  });
+  input.addEventListener('blur', () => setTimeout(close, 150));
+  form.addEventListener('submit', close);
+})();
 </script>
 </body>
 </html>
