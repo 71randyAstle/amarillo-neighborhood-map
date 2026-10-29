@@ -35,7 +35,8 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,42px);l
 
 .mapshell{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--panel)}
 #map{width:100%;height:clamp(420px,70vh,720px)}
-.embed #map{height:clamp(420px,calc(100vh - 150px),720px)}
+.embed #map{height:clamp(360px,calc(100vh - 205px),720px)}
+.embed.has-result #map{height:clamp(280px,calc(100vh - 420px),720px)}
 .hint{position:absolute;left:10px;bottom:10px;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:6px 10px;font-size:12.5px;color:var(--muted);pointer-events:none;max-width:60%}
 .readout{position:absolute;left:10px;top:10px;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px 12px;display:none;max-width:72%}
 .readout b{font-family:var(--display);font-size:17px;display:block;color:var(--ink)}
@@ -58,14 +59,35 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .dot{display:inline-block;width:11px;height:11px;border-radius:2px;flex:none;border:1px solid rgba(0,0,0,.25)}
 .embed .dirsec{display:none}
 .note{margin-top:30px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;max-width:72ch}
-@media (max-width:620px){ .hint{display:none} }
+.search{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.search input{flex:1 1 260px;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.search button{font:inherit;font-size:15px;font-weight:600;padding:10px 18px;border:0;border-radius:4px;background:#14365c;color:#fff;cursor:pointer}
+.search button:hover{background:#20507f}
+.result{background:var(--panel);border:1px solid var(--line);border-left:4px solid #14365c;border-radius:4px;padding:12px 14px;margin:0 0 12px;font-size:14px}
+.result .addr{font-weight:600;margin:0 0 8px;color:var(--ink)}
+.result table{border-collapse:collapse;width:100%}
+.result td{padding:5px 8px 5px 0;vertical-align:top;border-top:1px solid var(--line)}
+.result td.lv{color:var(--muted);white-space:nowrap;width:1%}
+.result td.go{text-align:right;white-space:nowrap}
+.result a{color:var(--accent);font-weight:600;text-decoration:none}
+.result a:hover{text-decoration:underline}
+.result .fine{color:var(--muted);font-size:12.5px;margin:8px 0 0}
+.result .err{color:var(--ink);margin:0}
+@media (max-width:620px){ .hint{display:none} .result td.go{white-space:normal} }
 </style>
 </head>
 <body>
 <div class="wrap">
 <p class="eyebrow">Canyon ISD &middot; Amarillo ISD</p>
 <h1>School zone map</h1>
-<p class="lede">Pick a grade level, then click a zone to see the homes for sale inside it.</p>
+<p class="lede">Search an address to see its schools, or pick a grade level and click any zone to see the homes for sale inside it.</p>
+
+<form class="search" id="addr-form" role="search">
+  <input id="addr" type="search" placeholder="Search an address, e.g. 6000 Hillside Rd, Amarillo" aria-label="Address" autocomplete="street-address">
+  <button type="submit" id="addr-btn">Find schools</button>
+</form>
+<div class="result" id="result" hidden></div>
 
 <div class="tabs" role="group" aria-label="Grade level" id="tabs">
   <button class="tab" type="button" data-level="elementary" aria-pressed="true">Elementary</button>
@@ -165,7 +187,7 @@ function setLevel(l){
     const base = id==='z-line-a' ? ['==',['get','district'],'Amarillo ISD'] : id==='z-line-c' ? ['==',['get','district'],'Canyon ISD'] : null;
     map.setFilter(id, base ? ['all', filt(), base] : filt());
   });
-  setHover(null); show(null); buildDir();
+  setHover(null); show(null); buildDir(); applySel();
 }
 document.getElementById('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) setLevel(b.dataset.level); });
 
@@ -174,13 +196,13 @@ map.on('load', () => {
   map.addSource('z', { type:'geojson', data: DATA });
   map.addLayer({ id:'z-fill', type:'fill', source:'z', filter: filt(), paint:{
     'fill-color': ['get','fill'],
-    'fill-opacity': ['case', ['boolean',['feature-state','hover'],false], 0.55, 0.28]
+    'fill-opacity': ['case', ['boolean',['feature-state','sel'],false], 0.6, ['boolean',['feature-state','hover'],false], 0.55, 0.28]
   }});
   map.addLayer({ id:'z-line-a', type:'line', source:'z', filter: ['all', filt(), ['==',['get','district'],'Amarillo ISD']], paint:{
-    'line-color': '#555', 'line-width': ['case', ['boolean',['feature-state','hover'],false], 2.4, 1]
+    'line-color': '#555', 'line-width': ['case', ['boolean',['feature-state','sel'],false], 3.2, ['boolean',['feature-state','hover'],false], 2.4, 1]
   }});
   map.addLayer({ id:'z-line-c', type:'line', source:'z', filter: ['all', filt(), ['==',['get','district'],'Canyon ISD']], paint:{
-    'line-color': '#14365c', 'line-width': ['case', ['boolean',['feature-state','hover'],false], 3.2, 2.2]
+    'line-color': '#14365c', 'line-width': ['case', ['boolean',['feature-state','sel'],false], 4, ['boolean',['feature-state','hover'],false], 3.2, 2.2]
   }});
   map.addLayer({ id:'z-label', type:'symbol', source:'z', filter: filt(), layout:{
     'text-field': ['get','short'], 'text-font': ['Noto Sans Bold'],
@@ -200,6 +222,67 @@ map.on('load', () => {
     try { (window.top || window).location.href = url; } catch(err){ window.location.href = url; }
   });
   buildDir();
+});
+
+// ---------- Address search ----------
+const LEVELS = [['elementary','Elementary'],['sixth_grade','Intermediate / 6th Grade'],['middle','Junior High / Middle'],['high','High School']];
+const OFFICIAL = '<a href="https://www.canyonisd.net/attendance-zones-boundaries" target="_blank" rel="noopener">Canyon ISD zone maps</a> or the <a href="https://apps.myplanware.com/schoolsearch/amarillo" target="_blank" rel="noopener">AISD School Locator</a>';
+let selIds = [], marker = null;
+function inRing(pt, ring){ let x=pt[0], y=pt[1], ins=false; for(let i=0,j=ring.length-1;i<ring.length;j=i++){ const xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1]; if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) ins=!ins; } return ins; }
+function inPoly(pt, rings){ if(!inRing(pt, rings[0])) return false; for(let k=1;k<rings.length;k++) if(inRing(pt, rings[k])) return false; return true; }
+function inGeom(pt, g){ if(g.type==='Polygon') return inPoly(pt, g.coordinates); if(g.type==='MultiPolygon') return g.coordinates.some(p => inPoly(pt, p)); return false; }
+function applySel(){
+  if (!map.getSource('z')) return;
+  DATA.features.forEach(f => { if (f.id!==undefined) map.setFeatureState({source:'z', id:f.id}, {sel:false}); });
+  selIds.forEach(id => { if (DATA.features[id].properties.level===level) map.setFeatureState({source:'z', id}, {sel:true}); });
+}
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function jsonp(url){ return new Promise((res, rej) => { const cb = '__geo'+Date.now()+Math.floor(Math.random()*1e4); const sc = document.createElement('script'); const t = setTimeout(() => { cleanup(); rej(new Error('timeout')); }, 9000); function cleanup(){ clearTimeout(t); delete window[cb]; sc.remove(); } window[cb] = d => { cleanup(); res(d); }; sc.onerror = () => { cleanup(); rej(new Error('load')); }; sc.src = url + '&callback=' + cb; document.head.appendChild(sc); }); }
+const BOX = {w:-102.35, e:-101.45, s:34.85, n:35.40};
+const inBox = (lng,lat) => lng>BOX.w && lng<BOX.e && lat>BOX.s && lat<BOX.n;
+async function geocode(q){
+  let qq = q; if (!/amarillo|canyon|bushland|tx|texas|\b79\d{3}\b/i.test(q)) qq = q + ', Amarillo, TX';
+  try {
+    const d = await jsonp('https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=jsonp&address=' + encodeURIComponent(qq));
+    const m = (d && d.result && d.result.addressMatches || []).find(m => inBox(m.coordinates.x, m.coordinates.y));
+    if (m) return {lng:m.coordinates.x, lat:m.coordinates.y, label:m.matchedAddress};
+  } catch(e) {}
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=us&bounded=1&viewbox=' + [BOX.w,BOX.n,BOX.e,BOX.s].join(',') + '&q=' + encodeURIComponent(qq));
+    const a = await r.json(); const h = a.find(h => inBox(+h.lon, +h.lat));
+    if (h) return {lng:+h.lon, lat:+h.lat, label:h.display_name.split(',').slice(0,4).join(',')};
+  } catch(e) {}
+  return null;
+}
+const resultEl = document.getElementById('result');
+document.getElementById('addr-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const q = document.getElementById('addr').value.trim(); if (!q) return;
+  const btn = document.getElementById('addr-btn'); btn.disabled = true; btn.textContent = 'Searching...';
+  resultEl.hidden = false; document.documentElement.classList.add('has-result'); setTimeout(() => map.resize(), 50); resultEl.innerHTML = '<p class="err">Looking up that address...</p>';
+  const g = await geocode(q);
+  btn.disabled = false; btn.textContent = 'Find schools';
+  if (!g) { selIds = []; applySel(); if (marker) { marker.remove(); marker = null; } resultEl.innerHTML = '<p class="err">We couldn\'t find that address. Check the spelling, or use the ' + OFFICIAL + '.</p>'; return; }
+  const pt = [g.lng, g.lat];
+  const hits = DATA.features.filter(f => inGeom(pt, f.geometry));
+  selIds = hits.map(f => f.id);
+  if (marker) marker.remove();
+  marker = new maplibregl.Marker({color:'#14365c'}).setLngLat(pt).addTo(map);
+  userMoved = true; map.flyTo({center: pt, zoom: 13.2, speed: 1.6});
+  applySel();
+  let html = '<p class="addr">' + esc(g.label) + '</p>';
+  if (!hits.length) {
+    html += '<p class="err">This address is outside the Canyon ISD and Amarillo ISD zones on this map. It may be in Bushland, Highland Park or River Road ISD. Check the property\'s tax record or ask us.</p>';
+  } else {
+    html += '<table>';
+    for (const [lv, label] of LEVELS) {
+      const f = hits.find(h => h.properties.level === lv);
+      html += '<tr><td class="lv">' + label + '</td>' + (f ? '<td><b>' + esc(f.properties.name) + '</b> <span style="color:var(--muted)">' + esc(f.properties.district) + '</span></td><td class="go"><a href="' + esc(f.properties.url) + '" target="_top">Homes in this zone</a></td>' : '<td colspan="2" style="color:var(--muted)">Not shown on this map</td>') + '</tr>';
+    }
+    html += '</table>';
+  }
+  html += '<p class="fine">Address matching is approximate. Confirm a specific address with the ' + OFFICIAL + ' before you buy.</p>';
+  resultEl.innerHTML = html;
 });
 </script>
 </body>
