@@ -152,6 +152,10 @@ const ZONE_PAGES = {
   'high|Amarillo High School': '/amarillo-high-school-zone-homes-for-sale/'
 };
 let ZONE_SELF = null;
+try { const _q = new URLSearchParams(location.search), _z = (_q.get('zone')||'').trim(), _lv = _q.get('level');
+  if (_z) { const _n = t => t.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    const _f = DATA.features.find(x => (!_lv || x.properties.level===_lv) && (_n(x.properties.name)===_n(_z) || _n(x.properties.short)===_n(_z) || _n(x.properties.name).startsWith(_n(_z))));
+    if (_f) ZONE_SELF = _f.properties.level + '|' + _f.properties.name; } } catch(e) {}
 function pageFor(props){ const k = props.level + '|' + props.name; return (ZONE_PAGES[k] && k !== ZONE_SELF) ? SITE + ZONE_PAGES[k] : null; }
 const map = new maplibregl.Map({
   container: 'map',
