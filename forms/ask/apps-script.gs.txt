@@ -1,0 +1,52 @@
+/**
+ * Website Leads - ShopAmarilloHomes
+ * Receives the "Ask Our Team" form from the zone pages (and later the
+ * Moving to Amarillo page), adds a row to the Leads tab and emails the team.
+ * Alert recipients live in Settings!B1 (comma-separated) so they can be
+ * changed without touching this code.
+ */
+function doPost(e) {
+  var p = (e && e.parameter) || {};
+  // Spam guards: hidden "website" field must stay empty; form must take > 3 s to fill.
+  if (p.website) return out_('ok');
+  if (p.t && (Date.now() - Number(p.t)) < 3000) return out_('ok');
+
+  var clean = function (v, max) { return String(v || '').replace(/[\r\n]+/g, ' ').trim().slice(0, max || 300); };
+  var row = [
+    new Date(),
+    clean(p.first_name, 60), clean(p.last_name, 60), clean(p.email, 120), clean(p.phone, 40),
+    clean(p.address, 200), clean(p.timeline, 60), String(p.question || '').trim().slice(0, 2000),
+    clean(p.page, 300), clean(p.zone, 120), 'New', ''
+  ];
+  if (!row[3] && !row[4]) return out_('missing contact');
+
+  var ss = SpreadsheetApp.getActive();
+  ss.getSheetByName('Leads').appendRow(row);
+
+  var to = String(ss.getSheetByName('Settings').getRange('B1').getValue() || '').trim();
+  var prefix = String(ss.getSheetByName('Settings').getRange('B2').getValue() || 'New website lead');
+  if (to) {
+    var body = [
+      'Name: ' + row[1] + ' ' + row[2],
+      'Email: ' + row[3],
+      'Phone: ' + row[4],
+      'Address asked about: ' + (row[5] || '-'),
+      'Buying when: ' + (row[6] || '-'),
+      'Zone: ' + (row[9] || '-'),
+      'Page: ' + (row[8] || '-'),
+      '',
+      'Question:',
+      row[7] || '-',
+      '',
+      'All leads: ' + ss.getUrl()
+    ].join('\n');
+    var opts = {};
+    if (row[3]) opts.replyTo = row[3];
+    MailApp.sendEmail(to, prefix + ': ' + (row[1] + ' ' + row[2]).trim() + (row[9] ? ' (' + row[9] + ')' : ''), body, opts);
+  }
+  return out_('ok');
+}
+
+function doGet() { return out_('Website Leads form endpoint is running.'); }
+
+function out_(msg) { return ContentService.createTextOutput(msg).setMimeType(ContentService.MimeType.TEXT); }

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ask Our Team | ShopAmarilloHomes.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{--navy:#1f3b57;--navy2:#2c5279;--ink:#1d2329;--muted:#5b6670;--line:#c9d2dc;--soft:#f2f4f7;--bg:#ffffff;--err:#a12a2a;--ok:#1f6b3a}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Poppins,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.45}
+.wrap{max-width:720px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 18px max(16px,env(safe-area-inset-right,0px))}
+h2{font-size:21px;margin:0 0 4px;color:var(--ink)}
+.sub{color:var(--muted);margin:0 0 16px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:0 0 4px}
+label .opt{font-weight:400;color:var(--muted)}
+input,select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+textarea{min-height:92px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy);outline-offset:1px;border-color:var(--navy)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+button{font:inherit;font-weight:700;font-size:16px;color:#fff;background:var(--navy);border:0;border-radius:8px;padding:13px 22px;cursor:pointer;justify-self:start}
+button:hover{background:var(--navy2)}
+button[disabled]{opacity:.65;cursor:default}
+.fine{font-size:12px;color:var(--muted);margin:2px 0 0}
+.msg{grid-column:1/-1;font-size:14px;margin:0}
+.msg.err{color:var(--err)}
+.done{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:8px;padding:16px 18px;background:var(--soft)}
+.done b{display:block;font-size:17px;margin:0 0 4px}
+@media (max-width:560px){form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="formbox">
+<h2 id="title">Ask Our Team About a Home</h2>
+<p class="sub" id="sub">Send us an address or a question. A local agent will get back to you, usually the same day.</p>
+<form id="ask" novalidate>
+  <div><label for="first_name">First name</label><input id="first_name" name="first_name" autocomplete="given-name" required></div>
+  <div><label for="last_name">Last name</label><input id="last_name" name="last_name" autocomplete="family-name" required></div>
+  <div><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+  <div><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" required></div>
+  <div class="full"><label for="address">Address you're asking about <span class="opt">(optional)</span></label><input id="address" name="address" autocomplete="off" placeholder="e.g. 6703 Garwood Rd"></div>
+  <div class="full"><label for="timeline">When are you hoping to buy?</label>
+    <select id="timeline" name="timeline">
+      <option value="">Choose one</option>
+      <option>Just exploring</option>
+      <option>In the next 3 months</option>
+      <option>In 3 to 6 months</option>
+      <option>6 months or more</option>
+    </select></div>
+  <div class="full"><label for="question">Your question <span class="opt">(optional)</span></label><textarea id="question" name="question"></textarea></div>
+  <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+  <p class="msg err" id="err" hidden></p>
+  <button type="submit" id="send">Send My Question</button>
+  <p class="fine full">By sending, you agree that our team may contact you by phone, text or email about your request. Message and data rates may apply. We never sell your information.</p>
+</form>
+</div>
+<div class="done" id="done" hidden><b>Thanks, we got it.</b>A local agent on our team will reach out soon. If it's urgent, call the number at the bottom of this page.</div>
+</div>
+<script>
+// Google Apps Script web app URL (Website Leads - ShopAmarilloHomes). Set after deployment.
+const ENDPOINT = '';
+const qs = new URLSearchParams(location.search);
+const zone = (qs.get('zone') || '').slice(0, 120);
+const page = (qs.get('page') || document.referrer || '').slice(0, 300);
+if (zone) {
+  document.getElementById('title').textContent = 'Ask About a Home in the ' + zone + ' Zone';
+  document.getElementById('sub').textContent = 'Send us an address or a question about ' + zone + '. A local agent will get back to you, usually the same day.';
+}
+const started = Date.now();
+const f = document.getElementById('ask'), err = document.getElementById('err'), btn = document.getElementById('send');
+function fail(m){ err.textContent = m; err.hidden = false; }
+f.addEventListener('submit', async e => {
+  e.preventDefault(); err.hidden = true;
+  const d = new FormData(f);
+  const fn = d.get('first_name').trim(), ln = d.get('last_name').trim(), em = d.get('email').trim(), ph = d.get('phone').trim();
+  if (!fn || !ln) return fail('Please add your first and last name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail('Please check your email address.');
+  if (ph.replace(/\D/g,'').length < 10) return fail('Please add a 10-digit phone number.');
+  if (!ENDPOINT) return fail('This form is not connected yet. Please call the number at the bottom of the page.');
+  const body = new URLSearchParams();
+  for (const [k,v] of d.entries()) body.append(k, v);
+  body.append('zone', zone); body.append('page', page); body.append('t', String(started));
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors', body });
+    document.getElementById('formbox').hidden = true; document.getElementById('done').hidden = false;
+  } catch (x) {
+    btn.disabled = false; btn.textContent = 'Send My Question';
+    fail('Something went wrong sending your question. Please try again, or call the number at the bottom of the page.');
+  }
+});
+</script>
+</body>
+</html>
