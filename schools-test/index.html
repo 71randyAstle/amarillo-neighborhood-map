@@ -84,8 +84,8 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .zonemode .search{margin:0 0 8px}
 .zonemode .result{margin:0 0 8px;padding:10px 12px}
 .zonemode.embed .wrap{padding-block:0}
-.zonemode.embed #map{height:clamp(240px,calc(100vh - 100px),720px)}
-.zonemode.embed.has-result #map{height:clamp(220px,calc(100vh - 330px),720px)}
+.zonemode.embed #map{height:clamp(240px,calc(100vh - 135px),720px)}
+.zonemode.embed.has-result #map{height:clamp(200px,calc(100vh - 360px),720px)}
 .zonemode .legend{margin:8px 0 0}
 @media (max-width:620px){ .hint{display:none} .result td.go{white-space:normal} }
 </style>
@@ -137,6 +137,22 @@ const LEVEL_TITLES = {elementary:"Elementary zones", sixth_grade:"6th grade and 
 const HOME_BOUNDS = [[-102.1550, 34.9950], [-101.6060, 35.2655]];
 const HOME_FIT = { padding: 0, animate: false };
 
+// Zones that have their own page on ShopAmarilloHomes.com (key: level|name)
+const SITE = 'https://www.shopamarillohomes.com';
+const ZONE_PAGES = {
+  'elementary|Arden Road Elementary': '/arden-road-elementary-zone-homes-for-sale/',
+  'elementary|City View Elementary': '/city-view-elementary-zone-homes-for-sale/',
+  'elementary|Heritage Hills Elementary': '/heritage-hills-elementary-zone-homes-for-sale/',
+  'elementary|Hillside Elementary': '/hillside-elementary-zone-homes-for-sale/',
+  'elementary|Sundown Lane Elementary': '/sundown-lane-elementary-zone-homes-for-sale/',
+  'elementary|Spring Canyon Elementary': '/spring-canyon-elementary-zone-homes-for-sale/',
+  'elementary|Woodlands Elementary School': '/woodlands-elementary-zone-homes-for-sale/',
+  'high|West Plains High School': '/west-plains-high-school-zone-homes-for-sale/',
+  'high|Randall High School': '/randall-high-school-zone-homes-for-sale/',
+  'high|Amarillo High School': '/amarillo-high-school-zone-homes-for-sale/'
+};
+let ZONE_SELF = null;
+function pageFor(props){ const k = props.level + '|' + props.name; return (ZONE_PAGES[k] && k !== ZONE_SELF) ? SITE + ZONE_PAGES[k] : null; }
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.openfreemap.org/styles/positron',
@@ -255,22 +271,6 @@ map.on('load', () => {
 });
 
 // ---------- Address search ----------
-// Zones that have their own page on ShopAmarilloHomes.com (key: level|name)
-const SITE = 'https://www.shopamarillohomes.com';
-const ZONE_PAGES = {
-  'elementary|Arden Road Elementary': '/arden-road-elementary-zone-homes-for-sale/',
-  'elementary|City View Elementary': '/city-view-elementary-zone-homes-for-sale/',
-  'elementary|Heritage Hills Elementary': '/heritage-hills-elementary-zone-homes-for-sale/',
-  'elementary|Hillside Elementary': '/hillside-elementary-zone-homes-for-sale/',
-  'elementary|Sundown Lane Elementary': '/sundown-lane-elementary-zone-homes-for-sale/',
-  'elementary|Spring Canyon Elementary': '/spring-canyon-elementary-zone-homes-for-sale/',
-  'elementary|Woodlands Elementary School': '/woodlands-elementary-zone-homes-for-sale/',
-  'high|West Plains High School': '/west-plains-high-school-zone-homes-for-sale/',
-  'high|Randall High School': '/randall-high-school-zone-homes-for-sale/',
-  'high|Amarillo High School': '/amarillo-high-school-zone-homes-for-sale/'
-};
-let ZONE_SELF = null;
-function pageFor(props){ const k = props.level + '|' + props.name; return (ZONE_PAGES[k] && k !== ZONE_SELF) ? SITE + ZONE_PAGES[k] : null; }
 function urlFor(props, pt){
   if (props.urls) { try { const urls = typeof props.urls==='string' ? JSON.parse(props.urls) : props.urls; const f = DATA.features.find(x => x.properties.name===props.name && x.properties.level===props.level && x.properties.district===props.district); if (f && f.geometry.type==='MultiPolygon') { const k = f.geometry.coordinates.findIndex(poly => inPoly(pt, poly)); if (k>=0 && urls[k]) return urls[k]; } } catch(e){} }
   return props.url;
