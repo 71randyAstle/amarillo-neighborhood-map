@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script>try{if(window.self!==window.top)document.documentElement.classList.add("embed")}catch(e){document.documentElement.classList.add("embed")}</script>
+<script>try{if(window.self!==window.top)document.documentElement.classList.add("embed")}catch(e){document.documentElement.classList.add("embed")}try{if(new URLSearchParams(location.search).get("zone"))document.documentElement.classList.add("zonemode")}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Amarillo School Zone Map | ShopAmarilloHomes.com</title>
@@ -80,6 +80,10 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .result a:hover{text-decoration:underline}
 .result .fine{color:var(--muted);font-size:12.5px;margin:8px 0 0}
 .result .err{color:var(--ink);margin:0}
+.zonemode .search,.zonemode .result,.zonemode .tabs,.zonemode .note,.zonemode .dirsec,.zonemode .hint{display:none !important}
+.zonemode.embed .wrap{padding-block:0}
+.zonemode.embed #map{height:calc(100vh - 44px)}
+.zonemode .legend{margin:8px 0 0}
 @media (max-width:620px){ .hint{display:none} .result td.go{white-space:normal} }
 </style>
 </head>
@@ -144,7 +148,8 @@ map.touchZoomRotate.disableRotation();
 let userMoved = false;
 ['dragstart','rotatestart','pitchstart'].forEach(ev => map.on(ev, () => userMoved = true));
 map.on('zoomstart', e => { if (e.originalEvent) userMoved = true; });
-function home(){ map.resize(); if (!userMoved) map.fitBounds(HOME_BOUNDS, HOME_FIT); }
+let ZONE_BOUNDS = null;
+function home(){ map.resize(); if (!userMoved) map.fitBounds(ZONE_BOUNDS || HOME_BOUNDS, ZONE_BOUNDS ? {padding: 30, animate: false} : HOME_FIT); }
 if (window.ResizeObserver) { let t=null; new ResizeObserver(() => { clearTimeout(t); t=setTimeout(home,50); }).observe(document.getElementById('map')); }
 window.addEventListener('load', () => setTimeout(home, 300));
 
@@ -228,6 +233,22 @@ map.on('load', () => {
     try { (window.top || window).location.href = url; } catch(err){ window.location.href = url; }
   });
   buildDir();
+  // ?zone=<school name>&level=<level>: open on one zone, highlighted and framed
+  try {
+    const qp = new URLSearchParams(location.search); const zq = (qp.get('zone')||'').toLowerCase().trim();
+    if (zq) {
+      const lv = qp.get('level');
+      const norm = t => t.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+      const f = DATA.features.find(x => (!lv || x.properties.level===lv) && (norm(x.properties.name)===norm(zq) || norm(x.properties.short)===norm(zq) || norm(x.properties.name).startsWith(norm(zq))));
+      if (f) {
+        if (f.properties.level !== level) setLevel(f.properties.level);
+        selIds = [f.id]; applySel();
+        let w=180,e=-180,so=90,n=-90; const walk = c => { if (typeof c[0]==='number') { w=Math.min(w,c[0]); e=Math.max(e,c[0]); so=Math.min(so,c[1]); n=Math.max(n,c[1]); } else c.forEach(walk); };
+        walk(f.geometry.coordinates);
+        ZONE_BOUNDS = [[w,so],[e,n]]; home();
+      }
+    }
+  } catch(err) {}
 });
 
 // ---------- Address search ----------
