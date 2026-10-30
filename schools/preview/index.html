@@ -299,24 +299,52 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 function jsonp(url){ return new Promise((res, rej) => { const cb = '__geo'+Date.now()+Math.floor(Math.random()*1e4); const sc = document.createElement('script'); const t = setTimeout(() => { cleanup(); rej(new Error('timeout')); }, 9000); function cleanup(){ clearTimeout(t); delete window[cb]; sc.remove(); } window[cb] = d => { cleanup(); res(d); }; sc.onerror = () => { cleanup(); rej(new Error('load')); }; sc.src = url + '&callback=' + cb; document.head.appendChild(sc); }); }
 const BOX = {w:-102.35, e:-101.45, s:34.85, n:35.40};
 const inBox = (lng,lat) => lng>BOX.w && lng<BOX.e && lat>BOX.s && lat<BOX.n;
+// Main street word of what the visitor typed (e.g. "4500 SW 45th Ave" -> "45th"), used to reject
+// geocoder matches on a different street (Census fuzzy-matched "7008 Windy Ridge" to "7008 Windridge Pl").
+const STREET_SKIP = /^(n|s|e|w|ne|nw|se|sw|north|south|east|west|st|street|ave|avenue|av|dr|drive|rd|road|ln|lane|blvd|boulevard|ct|court|cir|circle|pl|place|pkwy|parkway|trl|trail|way|ter|terrace|hwy|highway|loop|fm|tx|texas|amarillo|canyon|bushland|us|cr|county|unit|apt)$/i;
+function streetWord(q){
+  const t = q.toLowerCase().replace(/[.,#]/g,' ').split(/\s+/).filter(Boolean);
+  if (t.length && /^\d+[a-z]?$/.test(t[0])) t.shift();
+  const w = t.find(x => !STREET_SKIP.test(x) && !/^\d{5}$/.test(x));
+  if (w) return w.replace(/(st|nd|rd|th)$/,'') || w;
+  const fm = q.match(/\b(?:fm|cr|county road|us|hwy|highway|loop)\s*(\d+)/i); return fm ? fm[1] : '';
+}
+function sameStreet(q, label){
+  const w = streetWord(q); if (!w) return true;
+  const L = ' ' + String(label).toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ') + ' ';
+  if (L.includes(' ' + w)) return true;
+  const sq = w.replace(/\s/g,''), lq = L.replace(/\s/g,''); return w.length >= 5 && lq.includes(sq);
+}
 async function geocode(q){
   let qq = q; if (!/amarillo|canyon|bushland|tx|texas|\b79\d{3}\b/i.test(q)) qq = q + ', Amarillo, TX';
+  let fuzzy = null;
   try {
     const d = await jsonp('https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=jsonp&address=' + encodeURIComponent(qq));
-    const m = (d && d.result && d.result.addressMatches || []).find(m => inBox(m.coordinates.x, m.coordinates.y));
-    if (m) return {lng:m.coordinates.x, lat:m.coordinates.y, label:m.matchedAddress};
+    const ms = (d && d.result && d.result.addressMatches || []).filter(m => inBox(m.coordinates.x, m.coordinates.y));
+    const m = ms.find(m => sameStreet(q, m.matchedAddress));
+    if (m) return {lng:m.coordinates.x, lat:m.coordinates.y, label:m.matchedAddress, precise:true};
+    if (ms[0]) fuzzy = {lng:ms[0].coordinates.x, lat:ms[0].coordinates.y, label:ms[0].matchedAddress, precise:true, other:true};
   } catch(e) {}
   try {
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=us&bounded=1&viewbox=' + [BOX.w,BOX.n,BOX.e,BOX.s].join(',') + '&q=' + encodeURIComponent(qq));
-    const a = await r.json(); const h = a.find(h => inBox(+h.lon, +h.lat));
-    if (h) return {lng:+h.lon, lat:+h.lat, label:h.display_name.split(',').slice(0,4).join(',')};
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=us&bounded=1&viewbox=' + [BOX.w,BOX.n,BOX.e,BOX.s].join(',') + '&q=' + encodeURIComponent(qq));
+    const a = await r.json();
+    const h = a.find(h => inBox(+h.lon, +h.lat) && sameStreet(q, (h.address && (h.address.road || '')) + ' ' + h.display_name.split(',')[0]));
+    if (h) return {lng:+h.lon, lat:+h.lat, label:h.display_name.split(',').slice(0,4).join(','), precise: !!(h.address && h.address.house_number)};
   } catch(e) {}
-  return null;
+  try {
+    const r = await fetch('https://photon.komoot.io/api/?limit=5&lang=en&bbox=-102.35,34.85,-101.45,35.40&lat=35.15&lon=-101.88&q=' + encodeURIComponent(qq));
+    const j = await r.json();
+    const f = (j.features || []).find(f => { const c = f.geometry.coordinates, pr = f.properties || {}; return inBox(c[0], c[1]) && sameStreet(q, (pr.street || '') + ' ' + (pr.name || '')); });
+    if (f) { const pr = f.properties, c = f.geometry.coordinates;
+      return {lng:c[0], lat:c[1], label:[pr.housenumber ? pr.housenumber + ' ' + (pr.street||pr.name) : (pr.street||pr.name), pr.city || pr.county].filter(Boolean).join(', '), precise: !!pr.housenumber}; }
+  } catch(e) {}
+  return fuzzy;
 }
 const resultEl = document.getElementById('result');
 document.getElementById('addr-form').addEventListener('submit', async e => {
   e.preventDefault();
   const q = document.getElementById('addr').value.trim(); if (!q) return;
+  if (/^\s*\d{5}(-\d{4})?\s*$/.test(q) || !/\d/.test(q) && q.split(/\s+/).length < 2) { resultEl.hidden = false; document.documentElement.classList.add('has-result'); resultEl.innerHTML = '<p class="err">Enter a street address with the house number, for example 6000 Hillside Rd. A ZIP code alone covers several school zones.</p>'; return; }
   const btn = document.getElementById('addr-btn'); btn.disabled = true; btn.textContent = 'Searching...';
   resultEl.hidden = false; document.documentElement.classList.add('has-result'); setTimeout(() => map.resize(), 50); resultEl.innerHTML = '<p class="err">Looking up that address...</p>';
   const g = await geocode(q);
@@ -330,6 +358,8 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
   userMoved = true; map.flyTo({center: pt, zoom: 13.2, speed: 1.6});
   applySel();
   let html = '<p class="addr">' + esc(g.label) + '</p>';
+  if (g.other) html += '<p class="err">We couldn\'t find that exact street, so this is the closest address we found. If it isn\'t the right one, check the spelling.</p>';
+  else if (!g.precise) html += '<p class="err">We found the street but not the house number, so the pin may be off. Schools can change along a street; confirm the exact address.</p>';
   if (!hits.length) {
     html += '<p class="err">This address is outside the school districts on this map (Canyon, Amarillo, Bushland, Highland Park and River Road ISD). Check the property\'s tax record or ask us.</p>';
   } else {
