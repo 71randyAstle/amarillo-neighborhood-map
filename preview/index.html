@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script>try{if(window.self!==window.top)document.documentElement.classList.add("embed")}catch(e){document.documentElement.classList.add("embed")}</script>
+<script>try{if(window.self!==window.top)document.documentElement.classList.add("embed")}catch(e){document.documentElement.classList.add("embed")}try{if(/[?&]bare=1/.test(location.search))document.documentElement.classList.add("bare")}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Amarillo Neighborhood Map | ShopAmarilloHomes.com</title>
@@ -16,7 +16,7 @@
   --display:"Zilla Slab",Georgia,serif; --body:"Archivo","Helvetica Neue",Arial,sans-serif;
   --mapf:"Archivo Narrow","Archivo",Arial,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not(.embed){
   --bg:#12150F; --panel:#1B1F19; --ink:#E8EBE4; --muted:#98A094; --line:#2C3229;
   --accent:#74C4DC; --accent-soft:rgba(116,196,220,.20); --accent-hi:rgba(116,196,220,.52);
   --flag:#D79A4F; color-scheme:dark;}}
@@ -54,6 +54,9 @@ h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 4px}
 .embed .dirsec{display:none}
 .embed .wrap{padding-block:20px 16px}
 .embed #map{height:clamp(420px,calc(100vh - 215px),760px)}
+/* ?bare=1 (home page embed): the host page supplies the heading and intro */
+.bare .eyebrow,.bare h1,.bare .lede{display:none}
+.bare.embed #map{height:clamp(420px,calc(100vh - 110px),760px)}
 .dir{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px 30px}
 .grp{min-width:0}
 .grp h3{font-family:var(--mapf);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--muted);
