@@ -456,7 +456,7 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
     }
     html += '</table>';
   }
-  if (hits.length) html += askForm(g.label, hits);
+  if (hits.length && LEAD_ENDPOINT) html += askForm(g.label, hits);
   html += '<p class="fine">Zones can change. Official sources: ' + OFFICIAL + '.</p>';
   resultEl.innerHTML = html;
   wireAsk();
