@@ -36,7 +36,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,42px);l
 .readout b{font-family:var(--display);font-size:17px;display:block;color:var(--ink)}
 .readout span{font-size:12.5px;color:var(--muted)}
 .maplibregl-popup-content{font-family:var(--body);padding:10px 12px;border-radius:3px}
-.legend{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;font-size:13px;color:var(--muted);margin:12px 0 34px}
+.legend{display:flex;flex-wrap:wrap;gap:2px 14px;align-items:center;font-size:13px;line-height:1.5;color:var(--muted);margin:10px 0 0}
 .legend b{font-weight:500;color:var(--ink)}
 .sw{display:inline-block;width:15px;height:11px;border:1px solid var(--accent);background:var(--accent-soft);vertical-align:-1px;margin-right:6px}
 .sw.a{border:1px dashed var(--flag)}
@@ -52,11 +52,12 @@ h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 4px}
 .dirbody{display:none;margin-top:22px}
 .dirsec.open .dirbody{display:block}
 .embed .dirsec{display:none}
-.embed .wrap{padding-block:20px 16px}
-.embed #map{height:clamp(420px,calc(100vh - 215px),760px)}
+.embed .wrap{padding-block:20px 6px}
+.embed .legend{margin-top:6px;font-size:12.5px}
+.embed #map{height:clamp(420px,calc(100vh - 238px),760px)}
 /* ?bare=1 (home page embed): the host page supplies the heading and intro */
 .bare .eyebrow,.bare h1,.bare .lede{display:none}
-.bare.embed #map{height:clamp(420px,calc(100vh - 110px),760px)}
+.bare.embed #map{height:clamp(420px,calc(100vh - 82px),760px)}
 .dir{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px 30px}
 .grp{min-width:0}
 .grp h3{font-family:var(--mapf);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--muted);
@@ -84,8 +85,9 @@ h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 4px}
 </div>
 
 <p class="legend">
-<span><b>Solid outline</b> &mdash; inside the city limits</span>
-<span><b>Dashed outline</b> &mdash; outside the city limits</span>
+<span><b>Solid</b> = inside city limits</span>
+<span><b>Dashed</b> = outside</span>
+<span>Boundary lines are approximate.</span>
 </p>
 
 <div class="dirsec" id="dirsec">
@@ -108,7 +110,6 @@ h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 4px}
 </div>
 </div>
 
-<p class="note">Boundary lines are approximate.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js"></script>
