@@ -320,10 +320,10 @@ map.on('load', () => {
     marker=new maplibregl.Marker({color:'#C0392B'}).setLngLat(pt).addTo(map);
     userMoved=true; map.flyTo({center:pt,zoom:14});
     const hit=DATA.features.find(f=>inGeom(pt,f.geometry));
-    const addr=esc(g.label.replace(/, (TX|TEXAS),? ?\d{0,5}$/i,''));
+    const addr=esc(g.label.replace(/, (TX|TEXAS),? ?\d{0,5}$/i,'').toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase()));
     if(hit){
       const p=hit.properties, page=!/\/search\//.test(p.url);
-      res.innerHTML=addr+' is in <b>'+esc(p.name)+'</b>'+(p.approx?' <span class="muted">(approximate boundary)</span>':'')+'. <a href="'+esc(p.url)+'" data-go>'+(page?'See the '+esc(p.name)+' page':'See homes for sale there')+'</a>';
+      res.innerHTML=addr+' is in <b>'+esc(p.name)+'</b>'+(p.approx?' <span class="muted">(approximate boundary)</span>':'')+'. <a href="'+esc(p.url)+'" data-go>'+(page?'See homes in '+esc(p.name):'See homes for sale there')+'</a>';
       res.querySelector('[data-go]').addEventListener('click',ev=>{ev.preventDefault();go(p.url);});
     } else {
       res.innerHTML=addr+' <span class="muted">isn\'t inside one of our mapped neighborhoods. Zoom out to see the nearest ones.</span>';
