@@ -81,6 +81,9 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .result a:hover{text-decoration:underline}
 .result .fine{color:var(--muted);font-size:12.5px;margin:8px 0 0}
 .result .err{color:var(--ink);margin:0}
+.result .near{background:rgba(214,140,30,.14);border-left:3px solid #c27a12;padding:6px 8px;margin:6px 0 4px;color:var(--ink)}
+.result .dist{color:var(--muted);font-size:13px;margin:0 0 4px}
+@media (max-width:600px){.result{padding:10px 12px;font-size:13.5px}.result td{padding:4px 6px 4px 0}.result td.lv{white-space:normal;width:34%}.result .sd{display:none}.result .fine{font-size:12px}}
 .zonemode .tabs,.zonemode .note,.zonemode .dirsec,.zonemode .hint{display:none !important}
 .zonemode .search{margin:0 0 8px}
 .zonemode .result{margin:0 0 8px;padding:10px 12px}
@@ -151,7 +154,8 @@ const ZONE_PAGES = {
   'elementary|Woodlands Elementary School': '/woodlands-elementary-zone-homes-for-sale/',
   'high|West Plains High School': '/west-plains-high-school-zone-homes-for-sale/',
   'high|Randall High School': '/randall-high-school-zone-homes-for-sale/',
-  'high|Amarillo High School': '/amarillo-high-school-zone-homes-for-sale/'
+  'high|Amarillo High School': '/amarillo-high-school-zone-homes-for-sale/',
+  'high|Tascosa High School': '/tascosa-high-school-zone-homes-for-sale/'
 };
 let ZONE_SELF = null;
 try { const _q = new URLSearchParams(location.search), _z = (_q.get('zone')||'').trim(), _lv = _q.get('level');
@@ -344,6 +348,11 @@ async function geocode(q){
   } catch(e) {}
   return fuzzy;
 }
+// Distance (m) from a point to the nearest edge of the zones it falls in, per grade level.
+function segDist(p,a,b){ const kx=Math.cos(p[1]*Math.PI/180)*111320, ky=110540; const px=p[0]*kx,py=p[1]*ky,ax=a[0]*kx,ay=a[1]*ky,bx=b[0]*kx,by=b[1]*ky; const dx=bx-ax,dy=by-ay; let t=((px-ax)*dx+(py-ay)*dy)/((dx*dx+dy*dy)||1); t=Math.max(0,Math.min(1,t)); return Math.hypot(px-ax-t*dx,py-ay-t*dy); }
+function edgeDist(p,g){ let best=1e9; const polys=g.type==='Polygon'?[g.coordinates]:g.coordinates; for(const P of polys) for(const r of P) for(let i=1;i<r.length;i++){ const d=segDist(p,r[i-1],r[i]); if(d<best) best=d; } return best; }
+// Only AISD/CISD zones have internal lines worth warning about; the small districts are one zone each.
+function nearLine(pt, hits){ let best=null; for (const [lv,label] of LEVELS){ const f=hits.find(h=>h.properties.level===lv); if(!f || !/^(Amarillo|Canyon) ISD$/.test(f.properties.district)) continue; const d=edgeDist(pt,f.geometry); if(d<100 && (!best||d<best.d)) best={d,label}; } return best ? {m: Math.max(10, Math.round(best.d/10)*10), label: best.label} : null; }
 const resultEl = document.getElementById('result');
 document.getElementById('addr-form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -367,15 +376,20 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
   if (!hits.length) {
     html += '<p class="err">This address is outside the school districts on this map (Canyon, Amarillo, Bushland, Highland Park and River Road ISD). Check the property\'s tax record or ask us.</p>';
   } else {
+    const dists = [...new Set(hits.map(h => h.properties.district))];
+    html += '<p class="dist">' + esc(dists.join(' / ')) + '</p>';
+    const nl = nearLine(pt, hits);
+    if (nl) html += '<p class="near"><b>Close to a zone line.</b> This address is about ' + nl.m + ' m from the ' + esc(nl.label.toLowerCase()) + ' boundary, so confirm its schools with the district before you buy.</p>';
     html += '<table>';
     for (const [lv, label] of LEVELS) {
       const f = hits.find(h => h.properties.level === lv);
-      html += '<tr><td class="lv">' + label + '</td>' + (f ? '<td><b>' + esc(f.properties.name) + '</b> <span style="color:var(--muted)">' + esc(f.properties.district) + '</span></td><td class="go">' + (pageFor(f.properties) ? '<a href="' + esc(pageFor(f.properties)) + '" target="_top">Zone page</a> &middot; ' : '') + '<a href="' + esc(urlFor(f.properties, pt)) + '" target="_top">Homes</a></td>' : '<td colspan="2" style="color:var(--muted)">Not shown on this map</td>') + '</tr>';
+      html += '<tr><td class="lv">' + label + '</td>' + (f ? '<td><b>' + esc(f.properties.name) + '</b> <span class="sd" style="color:var(--muted)">' + esc(f.properties.district) + '</span></td><td class="go">' + (pageFor(f.properties) ? '<a href="' + esc(pageFor(f.properties)) + '" target="_top">Zone page</a> &middot; ' : '') + '<a href="' + esc(urlFor(f.properties, pt)) + '" target="_top">Homes</a></td>' : '<td colspan="2" style="color:var(--muted)">Not shown on this map</td>') + '</tr>';
     }
     html += '</table>';
   }
-  html += '<p class="fine">Address matching is approximate. Confirm a specific address with the ' + OFFICIAL + ' before you buy.</p>';
+  html += '<p class="fine">Zones can change. Official sources: ' + OFFICIAL + '.</p>';
   resultEl.innerHTML = html;
+  if (window.innerWidth < 700) { try { document.getElementById('map').scrollIntoView({behavior:'smooth', block:'nearest'}); } catch(e) {} }
 });
 
 // ---------- Autocomplete (street suggestions from Photon/OSM) ----------
