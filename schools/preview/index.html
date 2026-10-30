@@ -83,6 +83,24 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .result .err{color:var(--ink);margin:0}
 .result .near{background:rgba(214,140,30,.14);border-left:3px solid #c27a12;padding:6px 8px;margin:6px 0 4px;color:var(--ink)}
 .result .dist{color:var(--muted);font-size:13px;margin:0 0 4px}
+/* Lead hook: "Send us the address" */
+.ask{margin:12px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--accent-soft)}
+.ask h4{margin:0 0 2px;font-family:var(--display);font-size:16px;color:var(--ink)}
+.ask p{margin:0 0 8px;color:var(--muted);font-size:13px}
+.ask-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ask-grid .full{grid-column:1/-1}
+.ask label{display:block;font-size:12px;color:var(--muted);margin:0 0 2px}
+.ask input,.ask textarea{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.ask textarea{min-height:56px;resize:vertical}
+.ask input:focus,.ask textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ask button{font:inherit;font-weight:600;font-size:15px;padding:10px 18px;border:0;border-radius:4px;background:#14365c;color:#fff;cursor:pointer}
+.ask button:disabled{opacity:.6;cursor:default}
+.ask .ask-open{margin:0 0 2px}
+.ask .ask-err{color:#9A2A1F;font-size:13px;margin:6px 0 0}
+.ask .ask-done{font-size:14px;color:var(--ink)}
+.ask .ask-consent{font-size:11.5px;color:var(--muted);margin:6px 0 0}
+.ask .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:600px){.ask-grid{grid-template-columns:1fr}}
 @media (max-width:600px){.result{padding:10px 12px;font-size:13.5px}.result td{padding:4px 6px 4px 0}.result td.lv{white-space:normal;width:34%}.result .sd{display:none}.result .fine{font-size:12px}}
 .zonemode .tabs,.zonemode .note,.zonemode .dirsec,.zonemode .hint{display:none !important}
 .zonemode .search{margin:0 0 8px}
@@ -354,6 +372,57 @@ function edgeDist(p,g){ let best=1e9; const polys=g.type==='Polygon'?[g.coordina
 // Only AISD/CISD zones have internal lines worth warning about; the small districts are one zone each.
 function nearLine(pt, hits){ let best=null; for (const [lv,label] of LEVELS){ const f=hits.find(h=>h.properties.level===lv); if(!f || !/^(Amarillo|Canyon) ISD$/.test(f.properties.district)) continue; const d=edgeDist(pt,f.geometry); if(d<100 && (!best||d<best.d)) best={d,label}; } return best ? {m: Math.max(10, Math.round(best.d/10)*10), label: best.label} : null; }
 const resultEl = document.getElementById('result');
+// ---------- "Send us the address" lead form (Website Leads sheet via Apps Script) ----------
+const LEAD_ENDPOINT = '';
+let askStarted = 0, askZone = '', askAddr = '';
+function askForm(addr, hits){
+  askStarted = Date.now(); askAddr = String(addr || '').slice(0, 200);
+  const e = hits.find(h => h.properties.level === 'elementary'), hs = hits.find(h => h.properties.level === 'high');
+  askZone = [e && e.properties.short, hs && hs.properties.short].filter(Boolean).join(' / ').slice(0, 120);
+  return '<div class="ask" id="ask"><h4>Want us to confirm the schools for this home?</h4>' +
+    '<p>Send us the address and a local agent on our team will check it with the district and get back to you, usually the same day.</p>' +
+    '<button type="button" class="ask-open" id="ask-open">Send Us This Address</button>' +
+    '<form id="ask-form" novalidate hidden><div class="ask-grid">' +
+    '<div><label for="ask-name">Name</label><input id="ask-name" name="name" autocomplete="name" required></div>' +
+    '<div><label for="ask-phone">Phone</label><input id="ask-phone" name="phone" type="tel" autocomplete="tel" required></div>' +
+    '<div class="full"><label for="ask-email">Email</label><input id="ask-email" name="email" type="email" autocomplete="email" required></div>' +
+    '<div class="full"><label for="ask-addr">Address</label><input id="ask-addr" name="address" value="' + esc(askAddr) + '"></div>' +
+    '<div class="full"><label for="ask-q">Anything else? <span style="font-weight:normal">(optional)</span></label><textarea id="ask-q" name="question" placeholder="e.g. We have a 3rd grader and a 9th grader"></textarea></div>' +
+    '<div class="hp" aria-hidden="true"><label for="ask-web">Website</label><input id="ask-web" name="website" tabindex="-1" autocomplete="off"></div>' +
+    '<div class="full"><button type="submit" id="ask-send">Send the Address</button><p class="ask-err" id="ask-err" hidden></p>' +
+    '<p class="ask-consent">By sending, you agree that our team may contact you about this home. No spam, and we never sell your information.</p></div>' +
+    '</div></form></div>';
+}
+function wireAsk(){
+  const f = document.getElementById('ask-form'); if (!f) return;
+  const op = document.getElementById('ask-open');
+  op.addEventListener('click', () => { op.hidden = true; f.hidden = false; askStarted = Date.now(); setTimeout(() => { try { map.resize(); document.getElementById('ask-name').focus({preventScroll:true}); f.scrollIntoView({behavior:'smooth', block:'nearest'}); } catch(e) {} }, 30); });
+  const err = document.getElementById('ask-err'), btn = document.getElementById('ask-send');
+  const fail = m => { err.textContent = m; err.hidden = false; };
+  f.addEventListener('submit', async ev => {
+    ev.preventDefault(); err.hidden = true;
+    const d = new FormData(f);
+    const name = String(d.get('name')||'').trim(), ph = String(d.get('phone')||'').trim(), em = String(d.get('email')||'').trim();
+    if (!name) return fail('Please add your name.');
+    if (ph.replace(/\D/g,'').length < 10) return fail('Please add a 10-digit phone number.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail('Please check your email address.');
+    if (!LEAD_ENDPOINT) return fail('This form is being set up. Please use the Contact button at the top of the page for now.');
+    const parts = name.split(/\s+/); const body = new URLSearchParams();
+    body.append('first_name', parts.shift()); body.append('last_name', parts.join(' '));
+    body.append('email', em); body.append('phone', ph);
+    body.append('address', String(d.get('address')||'').trim()); body.append('timeline', '');
+    body.append('question', 'Please confirm the schools for this address.' + (String(d.get('question')||'').trim() ? ' ' + String(d.get('question')||'').trim() : ''));
+    body.append('zone', askZone); body.append('website', String(d.get('website')||''));
+    let page = ''; try { page = (window.top !== window && document.referrer) ? document.referrer : location.href; } catch(e) { page = location.href; }
+    body.append('page', page.slice(0, 300)); body.append('t', String(askStarted));
+    btn.disabled = true; btn.textContent = 'Sending...';
+    try {
+      await fetch(LEAD_ENDPOINT, { method: 'POST', mode: 'no-cors', body });
+      document.getElementById('ask').innerHTML = '<h4>Thanks, we got it.</h4><p class="ask-done">A local agent on our team will confirm the schools for ' + esc(String(d.get('address')||askAddr)) + ' and get back to you soon.</p>';
+    } catch (x) { btn.disabled = false; btn.textContent = 'Send the Address'; fail('Something went wrong. Please try again in a moment.'); }
+  });
+}
+
 document.getElementById('addr-form').addEventListener('submit', async e => {
   e.preventDefault();
   const q = document.getElementById('addr').value.trim(); if (!q) return;
@@ -387,8 +456,10 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
     }
     html += '</table>';
   }
+  if (hits.length) html += askForm(g.label, hits);
   html += '<p class="fine">Zones can change. Official sources: ' + OFFICIAL + '.</p>';
   resultEl.innerHTML = html;
+  wireAsk();
   if (window.innerWidth < 700) { try { document.getElementById('map').scrollIntoView({behavior:'smooth', block:'nearest'}); } catch(e) {} }
 });
 
