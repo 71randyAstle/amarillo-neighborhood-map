@@ -4,6 +4,7 @@
 <script>try{if(window.self!==window.top)document.documentElement.classList.add("embed")}catch(e){document.documentElement.classList.add("embed")}try{if(/[?&]bare=1/.test(location.search))document.documentElement.classList.add("bare")}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
 <title>Amarillo Neighborhood Map | ShopAmarilloHomes.com</title>
 <meta name="description" content="Interactive map of Amarillo, Canyon and Bushland neighborhoods. Click a neighborhood to see homes for sale there.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.css">
@@ -120,6 +121,11 @@ const DATA = {"type":"FeatureCollection","features":[{"type":"Feature","properti
 // so the embedded iframe shows the same framing as the standalone page.
 const HOME_BOUNDS = [[-101.9913, 35.0922], [-101.7713, 35.2218]];
 const HOME_FIT = { padding: 0, animate: false };
+// Phones (portrait): open about two zoom steps closer, on south Amarillo
+// (Coulter to Georgia, Sundown Ln to I-40). People can zoom out from there.
+const PHONE_BOUNDS = [[-101.9175, 35.1020], [-101.8625, 35.1900]];
+const isPhone = () => { const el = document.getElementById('map'); return el && el.clientWidth < el.clientHeight && el.clientWidth < 640; };
+const homeBounds = () => isPhone() ? PHONE_BOUNDS : HOME_BOUNDS;
 
 const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 const map = new maplibregl.Map({
@@ -127,7 +133,7 @@ const map = new maplibregl.Map({
   // OpenFreeMap doesn't actually publish a working "dark" style (that URL 404s),
   // so we always use the real, verified "positron" style for legible street labels.
   style: 'https://tiles.openfreemap.org/styles/positron',
-  bounds: HOME_BOUNDS,
+  bounds: homeBounds(),
   fitBoundsOptions: HOME_FIT,
   attributionControl: { compact: true }
 });
@@ -147,7 +153,7 @@ let userMoved = false;
 ['dragstart','rotatestart','pitchstart'].forEach(ev => map.on(ev, () => userMoved = true));
 map.on('zoomstart', e => { if (e.originalEvent) userMoved = true; });
 
-function home(){ map.resize(); if (!userMoved) map.fitBounds(HOME_BOUNDS, HOME_FIT); }
+function home(){ map.resize(); if (!userMoved) map.fitBounds(homeBounds(), HOME_FIT); }
 
 if (window.ResizeObserver) {
   let resizeTimer = null;
