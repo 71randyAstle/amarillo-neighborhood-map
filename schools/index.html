@@ -448,7 +448,7 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
     const dists = [...new Set(hits.map(h => h.properties.district))];
     html += '<p class="dist">' + esc(dists.join(' / ')) + '</p>';
     const nl = nearLine(pt, hits);
-    if (nl) html += '<p class="near"><b>Close to a zone line.</b> This address is about ' + nl.m + ' m from the ' + esc(nl.label.toLowerCase()) + ' boundary, so confirm its schools with the district before you buy.</p>';
+    if (nl) html += '<p class="near"><b>Close to a zone line.</b> This address is about ' + nl.m + ' m from the ' + esc(nl.label.toLowerCase()) + ' boundary, so confirm its schools with the ' + OFFICIAL + ' before you buy.</p>';
     html += '<table>';
     for (const [lv, label] of LEVELS) {
       const f = hits.find(h => h.properties.level === lv);
@@ -457,7 +457,6 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
     html += '</table>';
   }
   if (hits.length && LEAD_ENDPOINT) html += askForm(g.label, hits);
-  html += '<p class="fine">Zones can change. Official sources: ' + OFFICIAL + '.</p>';
   resultEl.innerHTML = html;
   wireAsk();
   if (window.innerWidth < 700) { try { document.getElementById('map').scrollIntoView({behavior:'smooth', block:'nearest'}); } catch(e) {} }
