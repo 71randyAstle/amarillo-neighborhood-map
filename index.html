@@ -123,7 +123,7 @@ const HOME_BOUNDS = [[-101.9913, 35.0922], [-101.7713, 35.2218]];
 const HOME_FIT = { padding: 0, animate: false };
 // Phones (portrait): open about two zoom steps closer, on south Amarillo
 // (Homestead/Soncy to Western St, Hollywood Rd to just north of I-40). People can zoom out from there.
-const PHONE_BOUNDS = [[-101.9571, 35.1167], [-101.8836, 35.2052]];
+const PHONE_BOUNDS = [[-101.9626, 35.1101], [-101.8781, 35.2118]];
 const isPhone = () => { const el = document.getElementById('map'); return el && el.clientWidth < el.clientHeight && el.clientWidth < 640; };
 const homeBounds = () => isPhone() ? PHONE_BOUNDS : HOME_BOUNDS;
 
