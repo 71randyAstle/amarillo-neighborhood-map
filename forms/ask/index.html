@@ -36,14 +36,13 @@ button[disabled]{opacity:.65;cursor:default}
 <body>
 <div class="wrap">
 <div id="formbox">
-<h2 id="title">Ask Our Team About a Home</h2>
-<p class="sub" id="sub">Send us an address or a question. A local agent will get back to you, usually the same day.</p>
+<h2 id="title">Questions About Homes for Sale?</h2>
+<p class="sub" id="sub">Ask about a home for sale or what to expect when buying here. A local agent on our team will get back to you.</p>
 <form id="ask" novalidate>
   <div><label for="first_name">First name</label><input id="first_name" name="first_name" autocomplete="given-name" required></div>
   <div><label for="last_name">Last name</label><input id="last_name" name="last_name" autocomplete="family-name" required></div>
   <div><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
   <div><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" required></div>
-  <div class="full"><label for="address">Address you're asking about <span class="opt">(optional)</span></label><input id="address" name="address" autocomplete="off" placeholder="e.g. 6703 Garwood Rd"></div>
   <div class="full"><label for="timeline">When are you hoping to buy?</label>
     <select id="timeline" name="timeline">
       <option value="">Choose one</option>
@@ -59,7 +58,7 @@ button[disabled]{opacity:.65;cursor:default}
   <p class="fine full">By sending, you agree that our team may contact you by phone, text or email about your request. Message and data rates may apply. We never sell your information.</p>
 </form>
 </div>
-<div class="done" id="done" hidden><b>Thanks, we got it.</b>A local agent on our team will reach out soon. If it's urgent, call the number at the bottom of this page.</div>
+<div class="done" id="done" hidden><b>Thanks, we got it.</b>A local agent on our team will get back to you.</div>
 </div>
 <script>
 // Google Apps Script web app URL (Website Leads - ShopAmarilloHomes). Set after deployment.
@@ -68,8 +67,7 @@ const qs = new URLSearchParams(location.search);
 const zone = (qs.get('zone') || '').slice(0, 120);
 const page = (qs.get('page') || document.referrer || '').slice(0, 300);
 if (zone) {
-  document.getElementById('title').textContent = 'Ask About a Home in the ' + zone + ' Zone';
-  document.getElementById('sub').textContent = 'Send us an address or a question about ' + zone + '. A local agent will get back to you, usually the same day.';
+  document.getElementById('title').textContent = 'Questions About Homes for Sale in the ' + zone + ' Zone?';
 }
 const started = Date.now();
 const f = document.getElementById('ask'), err = document.getElementById('err'), btn = document.getElementById('send');
@@ -81,7 +79,7 @@ f.addEventListener('submit', async e => {
   if (!fn || !ln) return fail('Please add your first and last name.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail('Please check your email address.');
   if (ph.replace(/\D/g,'').length < 10) return fail('Please add a 10-digit phone number.');
-  if (!ENDPOINT) return fail('This form is not connected yet. Please call the number at the bottom of the page.');
+  if (!ENDPOINT) return fail('This form is not connected yet. Please use the Contact button at the top of the page.');
   const body = new URLSearchParams();
   for (const [k,v] of d.entries()) body.append(k, v);
   body.append('zone', zone); body.append('page', page); body.append('t', String(started));
@@ -91,7 +89,7 @@ f.addEventListener('submit', async e => {
     document.getElementById('formbox').hidden = true; document.getElementById('done').hidden = false;
   } catch (x) {
     btn.disabled = false; btn.textContent = 'Send My Question';
-    fail('Something went wrong sending your question. Please try again, or call the number at the bottom of the page.');
+    fail('Something went wrong sending your question. Please try again, or use the Contact button at the top of the page.');
   }
 });
 </script>
