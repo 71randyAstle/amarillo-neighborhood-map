@@ -83,6 +83,13 @@ h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0 0 4px}
 .result .err{color:var(--ink);margin:0}
 .result .near{background:rgba(214,140,30,.14);border-left:3px solid #c27a12;padding:6px 8px;margin:6px 0 4px;color:var(--ink)}
 .result .dist{color:var(--muted);font-size:13px;margin:0 0 4px}
+.result .cta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 2px}
+.result .cta a{display:block;padding:10px 12px;border-radius:5px;background:#14365c;color:#fff;font-weight:600;font-size:14.5px;line-height:1.25;text-align:center;text-decoration:none}
+.result .cta a.alt{background:transparent;color:var(--ink);border:1.5px solid #14365c}
+.result .cta a:hover{text-decoration:none;filter:brightness(1.12)}
+.result .cta small{display:block;font-weight:400;font-size:12px;opacity:.9;margin-top:2px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .result .cta a.alt{border-color:var(--accent)}}
+@media (max-width:600px){.result .cta{grid-template-columns:1fr;gap:6px}.result .cta a{padding:9px 10px;font-size:14px}}
 /* Lead hook: "Send us the address" */
 .ask{margin:12px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--accent-soft)}
 .ask h4{margin:0 0 2px;font-family:var(--display);font-size:16px;color:var(--ink)}
@@ -459,6 +466,12 @@ document.getElementById('addr-form').addEventListener('submit', async e => {
       html += '<tr><td class="lv">' + label + '</td>' + (f ? '<td><b>' + esc(f.properties.name) + '</b> <span class="sd" style="color:var(--muted)">' + esc(f.properties.district) + '</span></td><td class="go">' + (pageFor(f.properties) ? '<a href="' + esc(pageFor(f.properties)) + '" target="_top">Zone page</a> &middot; ' : '') + '<a href="' + esc(urlFor(f.properties, pt)) + '" target="_top">Homes</a></td>' : '<td colspan="2" style="color:var(--muted)">Not shown on this map</td>') + '</tr>';
     }
     html += '</table>';
+    const ez = hits.find(h => h.properties.level === 'elementary') || hits[0];
+    if (ez) {
+      const su = urlFor(ez.properties, pt), pu = pageFor(ez.properties) || su;
+      html += '<div class="cta"><a href="' + esc(pu) + '" target="_top">See homes zoned to ' + esc(ez.properties.name) + '</a>' +
+        '<a class="alt" href="' + esc(su) + '" target="_top">Get new listings in this zone by email<small>Open the search, then tap Save Search</small></a></div>';
+    }
   }
   if (hits.length && LEAD_ENDPOINT) html += askForm(g.label, hits);
   resultEl.innerHTML = html;
