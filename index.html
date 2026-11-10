@@ -120,7 +120,10 @@ const HOME_FIT = { padding: 0, animate: false };
 // (Randy's screenshot 11/1: Soncy/Homestead to Georgia, Quail Creek/West Hills down to Grey Hawk/Pinnacle).
 const PHONE_BOUNDS = [[-101.9571, 35.1041], [-101.8638, 35.2148]];
 const isPhone = () => { const el = document.getElementById('map'); return el && el.clientWidth < el.clientHeight && el.clientWidth < 640; };
-const homeBounds = () => isPhone() ? PHONE_BOUNDS : HOME_BOUNDS;
+// On phones the zoom is set by the map's WIDTH only (west and east edges of PHONE_BOUNDS, centered on its middle),
+// so making the embed taller or shorter never changes which neighborhood names show - it only trims the top and bottom edge.
+const PHONE_FIT = [[PHONE_BOUNDS[0][0], (PHONE_BOUNDS[0][1] + PHONE_BOUNDS[1][1]) / 2 - 0.0005], [PHONE_BOUNDS[1][0], (PHONE_BOUNDS[0][1] + PHONE_BOUNDS[1][1]) / 2 + 0.0005]];
+const homeBounds = () => isPhone() ? PHONE_FIT : HOME_BOUNDS;
 
 const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 const map = new maplibregl.Map({
